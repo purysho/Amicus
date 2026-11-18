@@ -1,8 +1,10 @@
 # Amicus — a personal Law Student OS
 
-**Status:** v0.2 evidence-first vertical slice; an experimental local prototype, not a legal research service or a production legal assistant.
+**Status:** v0.2.1 evidence-first vertical slice; an experimental local prototype, not a legal research service or a production legal assistant.
 
 Amicus is a US 1L–3L personal operating system that connects study, evidence-backed progress, a historically grounded *Palsgraf* simulation, professional communications, and privacy controls. It is built for **one real student**, with an optional synthetic demo profile.
+
+**v0.2.1 hotfix:** Case Simulation now renders; adds frontend navigation regression coverage and a visible error fallback if any workspace fails to render. Existing `.local/amicus.db` data is preserved when only app files are replaced.
 
 ## Run locally (Windows, macOS or Linux)
 
