@@ -37,7 +37,7 @@ function draftEmail(body){const to=String(body.to||'').trim(),person=requireStri
  return {to,subject,text,format:'Minto-inspired: purpose first, supporting detail, specific request',status:'DRAFT — not sent',requiresApproval:true};}
 async function api(req,res,path){
  if(req.method==='GET'&&path==='/api/state')return json(res,stateView());
- if(req.method==='GET'&&path==='/api/health')return json(res,{ok:true,version:'0.2.0',model:modelStatus()});
+ if(req.method==='GET'&&path==='/api/health')return json(res,{ok:true,version:'0.2.1',model:modelStatus()});
  if(req.method==='GET'&&path.startsWith('/api/documents/')){const id=decodeURIComponent(path.split('/').at(-1));const state=readState();ensureCapability(state,'documents.read');const doc=getDoc(id);if(!doc)throw new ApiError(404,'Document not found');return json(res,{...doc,body:doc.body.slice(0,40000)});}
  if(req.method!=='POST')throw new ApiError(404,'No such API route');
  const body=await readBody(req);
