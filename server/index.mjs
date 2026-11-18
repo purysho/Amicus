@@ -15,6 +15,7 @@ function json(res,value,status=200){const data=JSON.stringify(value);res.writeHe
 async function readBody(req,limit=12*1024*1024){let size=0;const chunks=[];for await(const chunk of req){size+=chunk.length;if(size>limit)throw new ApiError(413,'Request too large');chunks.push(chunk);}try{return JSON.parse(Buffer.concat(chunks).toString('utf8')||'{}');}catch{throw new ApiError(400,'Invalid JSON');}}
 function stateView(){const state=readState();return {state,caseInfo:{title:CASE.title,citation:CASE.citation,stages:CASE.history,stage:CASE.history[state.sim.stage],facts:visibleFacts(state.sim),sources:visibleSources(state.sim),reveal:state.sim.stage===5?CASE.reveal:null},assessments:ASSESSMENTS,documents:listDocs(),model:modelStatus(),evidence:evidenceAudit(state),audit:latestAudit()};}
 const requireString=(v,max=4000)=>{if(typeof v!=='string'||!v.trim()||v.length>max)throw new ApiError(400,`Expected text (1–${max} characters)`);return v.trim();};
+function ensureCapability(state,capability){if(state.permissions[capability]!=='allow')throw new ApiError(403,`${capability} requires permission. Open Data & controls and change it to ALLOW.`);}
 function mutate(kind,payload,fn){const state=readState();const value=fn(state);appendActivity(state,kind,typeof payload==='string'?payload:JSON.stringify(payload).slice(0,150));saveState(state);audit(kind,payload);return {value,...stateView()};}
 async function ingest(body){
  const name=requireString(body.name,180);if(!/\.(txt|md|pdf)$/i.test(name))throw new ApiError(415,'Upload .txt, .md or .pdf');
@@ -37,7 +38,7 @@ function draftEmail(body){const to=String(body.to||'').trim(),person=requireStri
 async function api(req,res,path){
  if(req.method==='GET'&&path==='/api/state')return json(res,stateView());
  if(req.method==='GET'&&path==='/api/health')return json(res,{ok:true,version:'0.2.0',model:modelStatus()});
- if(req.method==='GET'&&path.startsWith('/api/documents/')){const id=decodeURIComponent(path.split('/').at(-1));const doc=getDoc(id);if(!doc)throw new ApiError(404,'Document not found');return json(res,{...doc,body:doc.body.slice(0,40000)});}
+ if(req.method==='GET'&&path.startsWith('/api/documents/')){const id=decodeURIComponent(path.split('/').at(-1));const state=readState();ensureCapability(state,'documents.read');const doc=getDoc(id);if(!doc)throw new ApiError(404,'Document not found');return json(res,{...doc,body:doc.body.slice(0,40000)});}
  if(req.method!=='POST')throw new ApiError(404,'No such API route');
  const body=await readBody(req);
  if(path==='/api/reset')return json(res,{...resetState(body.demo!==false),...stateView()});
@@ -52,6 +53,7 @@ async function api(req,res,path){
  if(path==='/api/sim/advance')return json(res,mutate('simulation.advance',{},state=>advance(state)));
  if(path==='/api/sim/reverse')return json(res,mutate('simulation.reverse',{},state=>roleSwitch(state)));
  if(path==='/api/sim/talk'){
+  ensureCapability(readState(),'simulation.respond');
   const text=requireString(body.text,3000);const state=readState();
   if(modelStatus().enabled&&modelStatus().provider==='remote'&&state.permissions['model.remote']!=='allow')throw new ApiError(403,'Remote AI requires permission. Open Data & controls and set model.remote to ALLOW, or use a local model.');
   if(state.sim.stage===5){const answer={text:'The historical reveal is open. Compare your argument with the actual reported opinions. For practice, use role reversal to defend the opposite position.',engine:'reveal'};return json(res,mutate('simulation.talk',{role:'reveal'},s=>{s.sim.transcript.push({role:'user',content:text},{role:'assistant',content:answer.text,engine:answer.engine});return answer;}));}
@@ -61,12 +63,12 @@ async function api(req,res,path){
  if(path==='/api/tutor/talk'){
   const text=requireString(body.text,3000);const state=readState();
   if(modelStatus().enabled&&modelStatus().provider==='remote'&&state.permissions['model.remote']!=='allow')throw new ApiError(403,'Remote AI requires permission. Open Data & controls and set model.remote to ALLOW, or use a local model.');
-  const docs=listDocs().slice(0,3).map(d=>getDoc(d.id));
+  const docs=state.permissions['documents.read']==='allow'?listDocs().slice(0,3).map(d=>getDoc(d.id)):[];
   const allowed=['explain','teach','socratic','cold-call','hint','exam','model-answer'];const mode=allowed.includes(body.mode)?body.mode:'socratic';
   const result=await tutoringResponse(state,text,mode,docs);audit('tutor.turn',{mode,engine:result.engine});return json(res,{result});
  }
- if(path==='/api/documents')return json(res,await ingest(body));
- if(path==='/api/drafts')return json(res,mutate('draft.create',{person:body.person},state=>{const draft={...draftEmail(body),id:`draft-${Date.now()}`,createdAt:new Date().toISOString()};state.drafts.unshift(draft);return draft;}));
+ if(path==='/api/documents'){ensureCapability(readState(),'documents.read');return json(res,await ingest(body));}
+ if(path==='/api/drafts')return json(res,mutate('draft.create',{person:body.person},state=>{ensureCapability(state,'draft.create');const draft={...draftEmail(body),id:`draft-${Date.now()}`,createdAt:new Date().toISOString()};state.drafts.unshift(draft);return draft;}));
  if(path==='/api/permissions')return json(res,mutate('permission.change',{capability:body.capability,value:body.value},state=>{if(!(body.capability in state.permissions)||!['allow','ask','deny'].includes(body.value))throw new ApiError(400,'Invalid permission');state.permissions[body.capability]=body.value;return state.permissions;}));
  if(path==='/api/export')return json(res,{state:readState(),documents:listDocs().map(d=>getDoc(d.id)),audit:latestAudit(),exportedAt:new Date().toISOString()});
  throw new ApiError(404,'No such API route');

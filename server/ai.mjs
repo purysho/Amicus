@@ -1,7 +1,7 @@
 import {CASE,visibleFacts,isOutcomeQuestion} from './engine.mjs';
 
 function getProvider(){return {base:process.env.AMICUS_MODEL_BASE_URL||'',model:process.env.AMICUS_MODEL||'',key:process.env.AMICUS_MODEL_API_KEY||''};}
-export function modelStatus(){const provider=getProvider();return {enabled:!!(provider.base&&provider.model),name:provider.model||null,provider:provider.base.includes('localhost')||provider.base.includes('127.0.0.1')?'local':'remote',keyConfigured:!!provider.key};}
+export function modelStatus(){const provider=getProvider();let local=false,valid=false;try{const url=new URL(provider.base);local=['localhost','127.0.0.1','[::1]'].includes(url.hostname);valid=local||url.protocol==='https:';}catch{}return {enabled:!!(valid&&provider.base&&provider.model),name:provider.model||null,provider:local?'local':'remote',keyConfigured:!!provider.key,configurationValid:valid||!provider.base};}
 function systemPersona(sim){
  const stage=CASE.history[sim.stage];
  const role=sim.role;

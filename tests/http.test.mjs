@@ -23,6 +23,10 @@ test('HTTP: local-first golden path and guarded writes',async()=>{
   const imported=await post(base,'/api/documents',{name:'notes.txt',base64:Buffer.from('Duty, breach, causation, damages.').toString('base64')});assert.equal(imported.status,200);assert.equal(imported.body.documents.length,1);
   const doc=await (await fetch(base+'/api/documents/'+imported.body.document.id)).json();assert.match(doc.body,/causation/);
   const draft=await post(base,'/api/drafts',{person:'Attorney Smith',occasion:'your public talk',point:'preparing effective questions'});assert.equal(draft.status,200);assert.equal(draft.body.value.status,'DRAFT — not sent');
+  const deny=await post(base,'/api/permissions',{capability:'draft.create',value:'deny'});assert.equal(deny.status,200);
+  const deniedDraft=await post(base,'/api/drafts',{person:'Attorney X',occasion:'a panel',point:'evidence'});assert.equal(deniedDraft.status,403);
+  const denySim=await post(base,'/api/permissions',{capability:'simulation.respond',value:'deny'});assert.equal(denySim.status,200);
+  const deniedChat=await post(base,'/api/sim/talk',{text:'Ask me a question'});assert.equal(deniedChat.status,403);
   const csrf=await post(base,'/api/permissions',{capability:'email.send',value:'allow'},{origin:'https://attacker.example'});assert.equal(csrf.status,403);
   const content=await (await fetch(base+'/')).text();assert.match(content,/Amicus/);
  }finally{await svc.close();}
