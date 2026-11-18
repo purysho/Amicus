@@ -37,7 +37,12 @@ export function visibleFacts(sim,role='counsel'){
  return CASE.facts.filter(x=>x.unlocksAt<=sim.stage && (['counsel','opposing'].includes(role)||x.knownBy.includes(role)));
 }
 export function visibleSources(sim){return CASE.sources.filter(s=>s.unlock<=sim.stage);}
-export function isOutcomeQuestion(text){return /(?:cardozo|andrews|final (?:holding|judgment|outcome|decision)|who won|how did (?:it|the case) end|248\s*N\.?Y\.?\s*339|may 29,? 1928)/i.test(text);}
+export function isOutcomeQuestion(text){
+ const s=String(text);
+ return /(?:cardozo|andrews|final (?:holding|judgment|outcome|decision)|who won|how did (?:it|the case) end|248\s*N\.?Y\.?\s*339|may 29,? 1928)/i.test(s)
+  || /(?:1928|court of appeals|appellate court).{0,85}(?:reversed|affirmed|held|majority|dissent|judgment|decided|ultimately)/i.test(s)
+  || /(?:railroad|railway|plaintiff|palsgraf).{0,65}(?:ultimately (?:won|lost|prevailed)|was (?:reversed|affirmed))/i.test(s);
+}
 export function canAdvance(sim){return sim.work.some(w=>w.stage===sim.stage && w.text.trim().length>=40);}
 export function advance(state){
  if(state.sim.stage>=STAGE_COUNT-1) throw new Error('Already at historical reveal');

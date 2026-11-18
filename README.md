@@ -1,10 +1,10 @@
 # Amicus — a personal Law Student OS
 
-**Status:** v0.2.1 evidence-first vertical slice; an experimental local prototype, not a legal research service or a production legal assistant.
+**Status:** v0.3.0 evidence-first vertical slice; an experimental local prototype, not a legal research service or a production legal assistant.
 
 Amicus is a US 1L–3L personal operating system that connects study, evidence-backed progress, a historically grounded *Palsgraf* simulation, professional communications, and privacy controls. It is built for **one real student**, with an optional synthetic demo profile.
 
-**v0.2.1 hotfix:** Case Simulation now renders; adds frontend navigation regression coverage and a visible error fallback if any workspace fails to render. Existing `.local/amicus.db` data is preserved when only app files are replaced.
+**v0.3.0 upgrade:** Local full-text passage search for uploaded documents, passage/page citations to retrieved excerpts, retrieval-grounded tutoring, backward indexing of existing `.local/amicus.db` uploads, and conservative quarantine of Palsgraf-related documents while the historical outcome is sealed. The 0.2.1 Case Simulation fix remains included. **No legal claim-level verification or fine-tuning has been performed.**
 
 ## Run locally (Windows, macOS or Linux)
 
@@ -41,7 +41,7 @@ AMICUS_MODEL=your-local-model-id
 2. Open **Palsgraf**; choose a side, interview simulated characters, inspect evidence with provenance and record a real work product at each stage before advancing.
 3. Traverse the **historical veil**: facts unlock by stage; final reported opinions unlock only after the appellate argument.
 4. Compare competing legal approaches, perform role reversal, and export personal data if desired.
-5. Upload a `.txt` or `.md` course excerpt (PDF ingestion works when **Poppler `pdftotext`** is installed), draft a networking email, and inspect permissions and the audit history.
+5. Upload a `.txt` or `.md` course excerpt (PDF extraction works when **Poppler `pdftotext`** is installed); search the text from **Research vault** and ask the tutor a related question to see retrieved passage references. Draft a networking email and inspect permissions and the audit history.
 
 ## Implemented versus not implemented
 
@@ -50,20 +50,21 @@ AMICUS_MODEL=your-local-model-id
 | Local-first personal workspace, demo vs fresh | Working |
 | SQLite persistence, permissions, audit, export | Working |
 | Digital Twin evidence log & repeat-resistant multiple-choice assessments | Working prototype; heuristic/synthetic prior, **not calibrated** |
-| Text/Markdown import and text-PDF extraction | Working; PDF requires Poppler; scanned PDFs need later OCR |
-| Human-feeling role-specific model conversations | Working **when provider configured**; otherwise labelled guided fallback |
+| Text/Markdown import, text-PDF extraction and local passage search | Working; PDF requires Poppler; scanned PDFs need later OCR |
+| Role-specific model conversations | Model adapter works **when provider configured**; otherwise labelled guided fallback; naturalness not validated |
 | Historical evidence unlock & stage progression | Working simplified workflow |
 | Historical source linking and post-1928 reveal | Working; links verified; **full trial record not ingested** |
 | Networking email draft | Working template; **never sends** |
 | Events and legal research | Verified source directories only; no live search/booking/citator yet |
 | Automated adversarial citation verification, semantic grading | **Not implemented** |
-| Voice, fine-tuning on transcripts, Gmail/Calendar, RAG indexing, OCR | **Not implemented** |
+| Semantic/vector RAG, voice, fine-tuning on transcripts, Gmail/Calendar, OCR | **Not implemented** |
 
 ## Read before extending
 
 - [`docs/PROJECT_DOSSIER.md`](docs/PROJECT_DOSSIER.md) — frozen interview requirements.
 - [`docs/SOURCES_AND_RIGHTS.md`](docs/SOURCES_AND_RIGHTS.md) — historical record, real transcripts, attribution and licensing.
 - [`docs/AI_BEHAVIOR.md`](docs/AI_BEHAVIOR.md) — character constraints, safety and evaluations.
+- [`docs/LOCAL_RETRIEVAL.md`](docs/LOCAL_RETRIEVAL.md) — indexed text search, citations, permission boundaries, and limitations.
 - [`tests/`](tests/) — executable baseline tests.
 
 ## Testing
@@ -73,3 +74,9 @@ npm test
 ```
 
 This app is for **educational simulation**, not legal advice. AI-generated dialogue is not historical testimony. The real student should never treat practice scores as an accurate grade forecast without rigorous calibration. Any live model can hallucinate despite prompt constraints; recheck primary sources before relying on legal assertions.
+
+## Upgrading an existing local installation
+
+Stop the server with Ctrl+C. Replace the application files with the new release **without deleting `.local/amicus.db`**. Re-run `npm start`; Amicus automatically indexes previously uploaded documents. Back up `.local/amicus.db` (including its `-wal`/`-shm` sidecars when present) before substantial updates. The app must be stopped to copy the database consistently.
+
+This release's browser UI has a local research search box. GitHub may not be reachable from some Windows networks; the release ZIP works independently after extraction.

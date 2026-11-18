@@ -32,3 +32,9 @@ Important distinctions:
 - Congress.gov / GovInfo: official legislation, public law, regulations and federal publications; build type-specific provenance and effective-date semantics.
 
 No licensing status is inferred merely from a source's accessibility. Source acquisition, extraction, semantic verification, negative-treatment checks and redistribution rights must be individually tracked before expanding the corpus.
+
+## Model behavior and courtroom transcripts (v0.3 roadmap note)
+
+The U.S. Supreme Court publishes transcripts and audio from modern oral arguments; see https://www.supremecourt.gov/oral_arguments/availabilityoforalargumenttranscripts.aspx and the Library of Congress oral-argument research guide at https://guides.loc.gov/supreme-court-records-and-briefs/oral-arguments . Such material can inform separate *evaluation of courtroom behavior*. It does **not** constitute a transcript of the 1928 New York *Palsgraf* proceedings, does not prove the simulated dialogue historically happened, and is not automatically licensed for arbitrary model-training redistribution. Any data-ingestion or fine-tuning pipeline must check transcript/source rights and preserve provenance before training. **No court transcript training or fine-tuning was performed in v0.3.0.**
+
+The published Court of Appeals *Palsgraf* opinion is available at https://law.justia.com/cases/new-york/court-of-appeals/1928/248-n-y-339-1928.html and New York Court's law librarian identifies surviving records and briefs at https://askalawlibrarian.nycourts.gov/legalresearch/faq/433991 . Source links are not equivalent to validated verbatim ingestion.

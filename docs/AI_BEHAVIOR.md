@@ -23,3 +23,7 @@ Blinded evaluators should compare Amicus with a simple generic courtroom chatbot
 - Check hosted AI permission `ASK/DENY` blocks remote requests.
 
 The initial `server/engine.mjs` tests verify deterministic stage and mastery invariants. Model-output red teaming cannot be claimed as executed without a configured model and evaluation runs.
+
+## v0.3 model-interface tests
+
+A local mock OpenAI-compatible model endpoint is used in `tests/model.test.mjs`. Tests inspect the role- and stage-specific system prompt, assert that pre-reveal opinion text is not included in that prompt, and deliberately return an outcome leak to verify that a deterministic output guard withholds it. The same mock tests the tutor's treatment of an uploaded prompt injection as document data. **This is not a real-model human-likeness benchmark.** Genuine blinded evaluators, procedural/objection realism tests, and licensed transcript selection remain pending.

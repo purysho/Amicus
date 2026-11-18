@@ -1,11 +1,11 @@
 import {createServer} from 'node:http';
-import {readFile,writeFile,mkdtemp,unlink} from 'node:fs/promises';
+import {readFile,writeFile,mkdtemp,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join,extname,resolve} from 'node:path';
 import {spawnSync} from 'node:child_process';
 import {existsSync} from 'node:fs';
 import {CASE, ASSESSMENTS,initialState,assess,visibleFacts,visibleSources,advance,submitWork,roleSwitch,evidenceAudit,appendActivity} from './engine.mjs';
-import {readState,saveState,resetState,listDocs,getDoc,addDoc,audit,latestAudit} from './db.mjs';
+import {readState,saveState,resetState,listDocs,getDoc,addDoc,searchDocuments,audit,latestAudit} from './db.mjs';
 import {simulationResponse,tutoringResponse,modelStatus} from './ai.mjs';
 if(existsSync('.env')){try{process.loadEnvFile('.env');}catch(e){console.warn('Could not read .env:',e.message);}}
 const port=Number(process.env.PORT||4173);const root=resolve('public');
@@ -25,10 +25,11 @@ async function ingest(body){
  if(name.toLowerCase().endsWith('.pdf')){
   if(bytes.subarray(0,4).toString()!=='%PDF')throw new ApiError(415,'Invalid PDF file');
   const temp=await mkdtemp(join(tmpdir(),'amicus-'));const path=join(temp,'upload.pdf');
-  try{await writeFile(path,bytes);const result=spawnSync('pdftotext',['-layout',path,'-'],{encoding:'utf8',timeout:18000,maxBuffer:4*1024*1024});if(result.error||result.status!==0)throw new ApiError(422,'PDF extraction requires Poppler pdftotext installed on this computer. Upload .txt/.md instead, or install Poppler.');content=result.stdout;type='pdf-extracted-text';}finally{await unlink(path).catch(()=>{});}
+  try{await writeFile(path,bytes);const result=spawnSync('pdftotext',['-layout',path,'-'],{encoding:'utf8',timeout:18000,maxBuffer:20*1024*1024});if(result.error||result.status!==0)throw new ApiError(422,'PDF extraction requires Poppler pdftotext installed on this computer. Upload .txt/.md instead, or install Poppler.');content=result.stdout;type='pdf-extracted-text';}finally{await rm(temp,{recursive:true,force:true}).catch(()=>{});}
  }else{content=bytes.toString('utf8');}
  content=content.replace(/\u0000/g,'').trim();if(!content)throw new ApiError(422,'No extractable text detected (scanned PDFs need OCR)');
- const doc={id:`doc-${Date.now()}-${Math.random().toString(36).slice(2,8)}`,name,type,body:content.slice(0,350000)};
+ if(content.length>12000000)throw new ApiError(413,'Extracted text exceeds 12 million characters. Split the textbook into smaller volumes.');
+ const doc={id:`doc-${Date.now()}-${Math.random().toString(36).slice(2,8)}`,name,type,body:content};
  addDoc(doc);audit('document.upload',{id:doc.id,name,type,length:doc.body.length});return {document:{id:doc.id,name,type,size:doc.body.length},...stateView()};
 }
 function draftEmail(body){const to=String(body.to||'').trim(),person=requireString(body.person,100),occasion=requireString(body.occasion,250),point=requireString(body.point,300);
@@ -37,7 +38,7 @@ function draftEmail(body){const to=String(body.to||'').trim(),person=requireStri
  return {to,subject,text,format:'Minto-inspired: purpose first, supporting detail, specific request',status:'DRAFT — not sent',requiresApproval:true};}
 async function api(req,res,path){
  if(req.method==='GET'&&path==='/api/state')return json(res,stateView());
- if(req.method==='GET'&&path==='/api/health')return json(res,{ok:true,version:'0.2.1',model:modelStatus()});
+ if(req.method==='GET'&&path==='/api/health')return json(res,{ok:true,version:'0.3.0',model:modelStatus()});
  if(req.method==='GET'&&path.startsWith('/api/documents/')){const id=decodeURIComponent(path.split('/').at(-1));const state=readState();ensureCapability(state,'documents.read');const doc=getDoc(id);if(!doc)throw new ApiError(404,'Document not found');return json(res,{...doc,body:doc.body.slice(0,40000)});}
  if(req.method!=='POST')throw new ApiError(404,'No such API route');
  const body=await readBody(req);
@@ -60,12 +61,13 @@ async function api(req,res,path){
   const response=await simulationResponse(state,text);
   return json(res,mutate('simulation.talk',{stage:state.sim.stage,engine:response.engine},s=>{if(s.sim.stage!==state.sim.stage)throw new ApiError(409,'Simulation stage changed');s.sim.transcript.push({role:'user',content:text},{role:'assistant',content:response.text,engine:response.engine});s.sim.transcript=s.sim.transcript.slice(-90);return response;}));
  }
+ if(path==='/api/research/search'){const state=readState();ensureCapability(state,'documents.read');const query=requireString(body.query,500);const hits=searchDocuments(query,8,{historicalVeil:state.sim.stage<5});audit('research.search',{termCount:query.trim().split(/\s+/).length,hits:hits.length});return json(res,{query,scope:'local-imported-documents',hits,historicalVeil:state.sim.stage<5,verification:'passage-locators-only; Palsgraf-related uploads quarantined while outcome is sealed; legal propositions NOT independently verified'});}
  if(path==='/api/tutor/talk'){
   const text=requireString(body.text,3000);const state=readState();
   if(modelStatus().enabled&&modelStatus().provider==='remote'&&state.permissions['model.remote']!=='allow')throw new ApiError(403,'Remote AI requires permission. Open Data & controls and set model.remote to ALLOW, or use a local model.');
-  const docs=state.permissions['documents.read']==='allow'?listDocs().slice(0,3).map(d=>getDoc(d.id)):[];
+  const hits=state.permissions['documents.read']==='allow'?searchDocuments(text,5,{historicalVeil:state.sim.stage<5}):[];
   const allowed=['explain','teach','socratic','cold-call','hint','exam','model-answer'];const mode=allowed.includes(body.mode)?body.mode:'socratic';
-  const result=await tutoringResponse(state,text,mode,docs);audit('tutor.turn',{mode,engine:result.engine});return json(res,{result});
+  const result=await tutoringResponse(state,text,mode,hits);audit('tutor.turn',{mode,engine:result.engine,citations:hits.map(h=>h.id)});return json(res,{result,citations:hits,verification:'retrieved excerpts; no legal claim-level verification'});
  }
  if(path==='/api/documents'){ensureCapability(readState(),'documents.read');return json(res,await ingest(body));}
  if(path==='/api/drafts')return json(res,mutate('draft.create',{person:body.person},state=>{ensureCapability(state,'draft.create');const draft={...draftEmail(body),id:`draft-${Date.now()}`,createdAt:new Date().toISOString()};state.drafts.unshift(draft);return draft;}));
