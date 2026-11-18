@@ -14,8 +14,8 @@ export function initialState(demo=true){
   mastery:{duty:{correct:3,total:5,confidence:'low',history:[]},'proximate-cause':{correct:2,total:5,confidence:'low',history:[]},advocacy:{correct:1,total:3,confidence:'low',history:[]}},
   assessments:[], practiceEvidence:[], courses: demo?[{id:'torts',name:'Torts',description:'Negligence · Duty · Scope of liability',status:'demo seed'}]:[],
   sim:{stage:0, side:'plaintiff',mode:'historical',role:'client',transcript:[],work:[],reviews:[],notes:'',reversed:false},
-  permissions:{'email.send':'ask','calendar.write':'ask','events.book':'ask','draft.create':'allow','documents.read':'allow','simulation.respond':'allow','model.remote':'ask'},
-  contacts:[], drafts:[], events:[], activity:[], createdAt:new Date().toISOString()
+  permissions:{'email.send':'ask','calendar.write':'ask','events.book':'ask','draft.create':'allow','documents.read':'allow','simulation.respond':'allow','model.remote':'ask','events.read':'allow','people.research':'ask','calendar.read':'ask','gmail.draft':'ask'},
+  contacts:[], drafts:[], events:[], tasks:[], activity:[], createdAt:new Date().toISOString()
  };
 }
 export function scoreFor(v){ return v&&v.total?Math.round(100*v.correct/v.total):null; }

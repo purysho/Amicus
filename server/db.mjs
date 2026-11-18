@@ -14,7 +14,10 @@ CREATE VIRTUAL TABLE IF NOT EXISTS document_passages USING fts5(doc_id UNINDEXED
 // Incrementally index previously imported documents after upgrading from v0.2.
 const indexedIds=new Set(db.prepare('SELECT DISTINCT doc_id FROM document_passages').all().map(r=>r.doc_id));
 for(const document of db.prepare('SELECT id,body FROM documents').all())if(!indexedIds.has(document.id))indexDocument(document);
-export function readState(){const row=db.prepare('SELECT json FROM state WHERE id=1').get();return row?JSON.parse(row.json):initialState(true);}
+export function readState(){const row=db.prepare('SELECT json FROM state WHERE id=1').get();if(!row)return initialState(true);
+ const old=JSON.parse(row.json), defaults=initialState(old.mode!=='fresh');
+ return {...defaults,...old,permissions:{...defaults.permissions,...old.permissions},contacts:old.contacts||[],events:old.events||[],drafts:old.drafts||[],tasks:old.tasks||[],activity:old.activity||[]};
+}
 export function saveState(state){db.prepare(`INSERT INTO state(id,json,version) VALUES(1,?,1) ON CONFLICT(id) DO UPDATE SET json=excluded.json, version=version+1`).run(JSON.stringify(state));}
 export function resetState(demo){
  const state=initialState(demo);db.exec('BEGIN');

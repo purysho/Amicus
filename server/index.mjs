@@ -7,13 +7,17 @@ import {existsSync} from 'node:fs';
 import {CASE, ASSESSMENTS,initialState,assess,visibleFacts,visibleSources,advance,submitWork,roleSwitch,evidenceAudit,appendActivity} from './engine.mjs';
 import {readState,saveState,resetState,listDocs,getDoc,addDoc,searchDocuments,audit,latestAudit,allAudit} from './db.mjs';
 import {simulationResponse,tutoringResponse,reviewSimulationWork,modelStatus} from './ai.mjs';
+import {PUBLIC_FEEDS,SOURCE_DIRECTORIES,parseICalendar,rankOpportunity,careerPlan,createContact,addInteraction,createTask,createMintoDraft,eventToICS,legalUrl} from './career.mjs';
+import {googleStatus,beginGoogle,completeGoogle,disconnectGoogle,clearGoogleVault,createGmailDraft,sendGmailDraft,listCalendar,createCalendarEvent,fetchPublicFeed} from './integrations.mjs';
+import {searchSpeaker} from './speakers.mjs';
 if(existsSync('.env')){try{process.loadEnvFile('.env');}catch(e){console.warn('Could not read .env:',e.message);}}
 const port=Number(process.env.PORT||4173);const root=resolve('public');
 const mime={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.svg':'image/svg+xml'};
+const outboundInFlight=new Set();
 class ApiError extends Error{constructor(status,message){super(message);this.status=status;}}
 function json(res,value,status=200){const data=JSON.stringify(value);res.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Content-Length':Buffer.byteLength(data),'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});res.end(data);}
 async function readBody(req,limit=12*1024*1024){let size=0;const chunks=[];for await(const chunk of req){size+=chunk.length;if(size>limit)throw new ApiError(413,'Request too large');chunks.push(chunk);}try{return JSON.parse(Buffer.concat(chunks).toString('utf8')||'{}');}catch{throw new ApiError(400,'Invalid JSON');}}
-function stateView(){const state=readState();return {state,caseInfo:{title:CASE.title,citation:CASE.citation,stages:CASE.history,stage:CASE.history[state.sim.stage],facts:visibleFacts(state.sim),sources:visibleSources(state.sim),reveal:state.sim.stage===5?CASE.reveal:null},assessments:ASSESSMENTS,documents:listDocs(),model:modelStatus(),evidence:evidenceAudit(state),audit:latestAudit()};}
+function stateView(){const state=readState();return {state,career:{sources:SOURCE_DIRECTORIES,liveFeeds:PUBLIC_FEEDS,plan:careerPlan(state.student,state.contacts,state.events,state.tasks),ranked:state.events.map(e=>({id:e.id,...rankOpportunity(e,state.student)})).sort((a,b)=>b.score-a.score),google:googleStatus()},caseInfo:{title:CASE.title,citation:CASE.citation,stages:CASE.history,stage:CASE.history[state.sim.stage],facts:visibleFacts(state.sim),sources:visibleSources(state.sim),reveal:state.sim.stage===5?CASE.reveal:null},assessments:ASSESSMENTS,documents:listDocs(),model:modelStatus(),evidence:evidenceAudit(state),audit:latestAudit()};}
 const requireString=(v,max=4000)=>{if(typeof v!=='string'||!v.trim()||v.length>max)throw new ApiError(400,`Expected text (1–${max} characters)`);return v.trim();};
 function ensureCapability(state,capability){if(state.permissions[capability]!=='allow')throw new ApiError(403,`${capability} requires permission. Open Data & controls and change it to ALLOW.`);}
 function mutate(kind,payload,fn){const state=readState();const value=fn(state);appendActivity(state,kind,typeof payload==='string'?payload:JSON.stringify(payload).slice(0,150));saveState(state);audit(kind,payload);return {value,...stateView()};}
@@ -38,11 +42,15 @@ function draftEmail(body){const to=String(body.to||'').trim(),person=requireStri
  return {to,subject,text,format:'Minto-inspired: purpose first, supporting detail, specific request',status:'DRAFT — not sent',requiresApproval:true};}
 async function api(req,res,path){
  if(req.method==='GET'&&path==='/api/state')return json(res,stateView());
- if(req.method==='GET'&&path==='/api/health')return json(res,{ok:true,version:'0.4.0',model:modelStatus()});
+ if(req.method==='GET'&&path==='/api/health')return json(res,{ok:true,version:'0.5.0',model:modelStatus()});
+ if(req.method==='GET'&&path==='/api/google/status')return json(res,googleStatus());
  if(req.method==='GET'&&path.startsWith('/api/documents/')){const id=decodeURIComponent(path.split('/').at(-1));const state=readState();ensureCapability(state,'documents.read');const doc=getDoc(id);if(!doc)throw new ApiError(404,'Document not found');return json(res,{...doc,body:doc.body.slice(0,40000)});}
  if(req.method!=='POST')throw new ApiError(404,'No such API route');
  const body=await readBody(req);
- if(path==='/api/reset')return json(res,{...resetState(body.demo!==false),...stateView()});
+ if(path==='/api/reset'){
+  const reset=resetState(body.demo!==false);clearGoogleVault();
+  return json(res,{...reset,...stateView()});
+ }
  if(path==='/api/onboard')return json(res,mutate('onboard',{year:body.year,school:body.school},state=>{state.student={name:String(body.name||'').slice(0,100),year:String(body.year||'1L').slice(0,10),school:String(body.school||'').slice(0,150),city:String(body.city||'').slice(0,150),interest:String(body.interest||'').slice(0,100)};return state.student;}));
  if(path==='/api/assess')return json(res,mutate('assessment',{id:body.id},state=>assess(state,body.id,body.answer)));
  if(path==='/api/sim/config')return json(res,mutate('simulation.config',{side:body.side,mode:body.mode,role:body.role},state=>{
@@ -86,7 +94,73 @@ async function api(req,res,path){
   const result=await tutoringResponse(state,text,mode,hits);audit('tutor.turn',{mode,engine:result.engine,citations:hits.map(h=>h.id)});return json(res,{result,citations:hits,verification:'retrieved excerpts; no legal claim-level verification'});
  }
  if(path==='/api/documents'){ensureCapability(readState(),'documents.read');return json(res,await ingest(body));}
- if(path==='/api/drafts')return json(res,mutate('draft.create',{person:body.person},state=>{ensureCapability(state,'draft.create');const draft={...draftEmail(body),id:`draft-${Date.now()}`,createdAt:new Date().toISOString()};state.drafts.unshift(draft);return draft;}));
+ if(path==='/api/drafts')return json(res,mutate('draft.create',{person:body.person},state=>{ensureCapability(state,'draft.create');const draft=createMintoDraft(body);state.drafts.unshift(draft);return draft;}));
+ // Career actions: all local state mutations are audited; bookings are NEVER assumed.
+ if(path==='/api/events/import'){
+  const name=requireString(body.name,150);if(typeof body.base64!=='string'||body.base64.length>2700000)throw new ApiError(413,'Event feed file too large');
+  const input=Buffer.from(body.base64,'base64').toString('utf8');const events=parseICalendar(input,{source:name});
+  return json(res,mutate('events.import',{name,count:events.length},s=>{s.events??=[];const ids=new Set(s.events.map(e=>e.id));let count=0;for(const e of events){if(!ids.has(e.id)){s.events.push(e);ids.add(e.id);count++;}}return {imported:count,parsed:events.length,source:name};}));
+ }
+ if(path==='/api/events/sync'){
+  const state=readState();ensureCapability(state,'events.read');const target=body.feedId?PUBLIC_FEEDS.find(x=>x.id===body.feedId)?.url:body.url;
+  if(!target)throw new ApiError(400,'Choose a live feed');const live=await fetchPublicFeed(target);
+  return json(res,mutate('events.sync',{source:live.source,count:live.events.length},s=>{s.events??=[];const prior=new Map(s.events.map(e=>[e.id,e]));for(const e of live.events){prior.set(e.id,{...e,saved:prior.get(e.id)?.saved||false});}s.events=[...prior.values()].slice(-500);return {fetched:live.events.length,source:live.source,fetchedAt:live.fetchedAt};}));
+ }
+ if(path==='/api/events/save')return json(res,mutate('events.save',{id:body.id},s=>{const event=s.events.find(e=>e.id===body.id);if(!event)throw new ApiError(404,'Event not found');event.saved=!!body.saved;return {id:event.id,saved:event.saved};}));
+ if(path==='/api/events/remove')return json(res,mutate('events.remove',{id:body.id},s=>{const before=s.events.length;s.events=s.events.filter(e=>e.id!==body.id);if(s.events.length===before)throw new ApiError(404,'Event not found');return {removed:body.id};}));
+ if(path==='/api/events/ics'){
+  const event=readState().events.find(e=>e.id===body.id);if(!event)throw new ApiError(404,'Event not found');return json(res,{filename:'amicus-event.ics',content:eventToICS(event),note:'Calendar export does not register for an event'});
+ }
+ if(path==='/api/contacts')return json(res,mutate('contacts.save',{id:body.id||null},s=>{s.contacts??=[];const idx=s.contacts.findIndex(c=>c.id===body.id);const contact=createContact(body,idx>=0?s.contacts[idx]:null);if(idx>=0)s.contacts[idx]=contact;else s.contacts.unshift(contact);return contact;}));
+ if(path==='/api/contacts/delete')return json(res,mutate('contacts.delete',{id:body.id},s=>{const before=s.contacts.length;s.contacts=s.contacts.filter(c=>c.id!==body.id);if(s.contacts.length===before)throw new ApiError(404,'Contact not found');return {removed:body.id};}));
+ if(path==='/api/contacts/interaction')return json(res,mutate('contacts.interaction',{id:body.id,kind:body.kind},s=>{const c=s.contacts.find(x=>x.id===body.id);if(!c)throw new ApiError(404,'Contact not found');return addInteraction(c,body);}));
+ if(path==='/api/tasks')return json(res,mutate('tasks.create',{title:body.title},s=>{s.tasks??=[];const t=createTask(body);s.tasks.unshift(t);return t;}));
+ if(path==='/api/tasks/delete')return json(res,mutate('tasks.delete',{id:body.id},s=>{const before=s.tasks.length;s.tasks=s.tasks.filter(t=>t.id!==body.id);if(s.tasks.length===before)throw new ApiError(404,'Task not found');return {removed:body.id};}));
+ if(path==='/api/tasks/complete')return json(res,mutate('tasks.complete',{id:body.id},s=>{const t=s.tasks.find(x=>x.id===body.id);if(!t)throw new ApiError(404,'Task not found');t.done=!!body.done;return t;}));
+ if(path==='/api/speakers/research'){
+  ensureCapability(readState(),'people.research');const result=await searchSpeaker(requireString(body.name,120));audit('speakers.search',{termLength:body.name.length,results:result.candidates.length});return json(res,result);
+ }
+ if(path==='/api/google/disconnect'){
+  if(!['gmail','calendar'].includes(body.service))throw new ApiError(400,'Invalid Google service');
+  const result=disconnectGoogle(body.service);audit('google.disconnect',{service:body.service});return json(res,result);
+ }
+ if(path==='/api/google/calendar/list'){
+  ensureCapability(readState(),'calendar.read');const events=await listCalendar();audit('calendar.read',{count:events.length});return json(res,{events,status:'Live connected Google Calendar; no changes made'});
+ }
+ if(path==='/api/google/calendar/create'){
+  const state=readState();ensureCapability(state,'calendar.write');
+  if(body.confirm!=='CREATE CALENDAR EVENT')throw new ApiError(403,'Explicit calendar approval required');
+  const event=state.events.find(x=>x.id===body.id);if(!event)throw new ApiError(404,'Event not found');
+  if(event.googleCalendarId)throw new ApiError(409,'Calendar entry already created for this event');
+  if(outboundInFlight.has('calendar:'+event.id))throw new ApiError(409,'Calendar entry creation already in progress');
+  outboundInFlight.add('calendar:'+event.id);
+  try{
+   const created=await createCalendarEvent(event);
+   return json(res,mutate('calendar.created',{eventId:event.id,calendarEventId:created.id},s=>{const e=s.events.find(x=>x.id===event.id);e.googleCalendarId=created.id;return {id:created.id,url:created.htmlLink||null,status:'Calendar event created. This is NOT event registration.'};}));
+  }finally{outboundInFlight.delete('calendar:'+event.id);}
+ }
+ if(path==='/api/google/gmail/draft'){
+  const state=readState();ensureCapability(state,'gmail.draft');if(body.confirm!=='CREATE GMAIL DRAFT')throw new ApiError(403,'Explicit Gmail draft approval required');
+  const draft=state.drafts.find(x=>x.id===body.id);if(!draft)throw new ApiError(404,'Draft not found');
+  if(draft.gmailDraftId)throw new ApiError(409,'Already created in Gmail; open Gmail to edit or send');
+  if(outboundInFlight.has('draft:'+draft.id))throw new ApiError(409,'Draft creation already in progress');
+  outboundInFlight.add('draft:'+draft.id);
+  try{
+   const created=await createGmailDraft(draft);
+   return json(res,mutate('gmail.draft.created',{draftId:draft.id},s=>{const d=s.drafts.find(x=>x.id===draft.id);d.gmailDraftId=created.id;d.status='GMAIL DRAFT — not sent';return {id:d.id,gmailDraftId:created.id,status:d.status};}));
+  }finally{outboundInFlight.delete('draft:'+draft.id);}
+ }
+ if(path==='/api/google/gmail/send'){
+  const state=readState();ensureCapability(state,'email.send');if(body.confirm!=='SEND EMAIL')throw new ApiError(403,'Explicit send approval required');
+  const draft=state.drafts.find(x=>x.id===body.id);if(!draft?.gmailDraftId)throw new ApiError(400,'Create a Gmail draft before sending');
+  if(draft.status==='SENT')throw new ApiError(409,'Already sent');
+  if(outboundInFlight.has('send:'+draft.id))throw new ApiError(409,'Email send already in progress');
+  outboundInFlight.add('send:'+draft.id);
+  try{
+   const sent=await sendGmailDraft(draft.gmailDraftId);
+   return json(res,mutate('gmail.sent',{draftId:draft.id,gmailId:sent.id},s=>{const d=s.drafts.find(x=>x.id===draft.id);d.status='SENT';d.sentAt=new Date().toISOString();d.gmailMessageId=sent.id;return {id:d.id,status:d.status,gmailMessageId:sent.id};}));
+  }finally{outboundInFlight.delete('send:'+draft.id);}
+ }
  if(path==='/api/permissions')return json(res,mutate('permission.change',{capability:body.capability,value:body.value},state=>{if(!(body.capability in state.permissions)||!['allow','ask','deny'].includes(body.value))throw new ApiError(400,'Invalid permission');state.permissions[body.capability]=body.value;return state.permissions;}));
  if(path==='/api/export')return json(res,{state:readState(),documents:listDocs().map(d=>getDoc(d.id)),audit:allAudit(),exportedAt:new Date().toISOString()});
  throw new ApiError(404,'No such API route');
@@ -94,6 +168,12 @@ async function api(req,res,path){
 const server=createServer(async(req,res)=>{
  try{
   const url=new URL(req.url,'http://localhost');const path=decodeURIComponent(url.pathname);
+  if(path==='/api/google/connect'&&req.method==='GET'){
+   const service=url.searchParams.get('service');const location=beginGoogle(service);res.writeHead(302,{Location:location,'Cache-Control':'no-store'});return res.end();
+  }
+  if(path==='/api/google/callback'&&req.method==='GET'){
+   const service=await completeGoogle({state:url.searchParams.get('state'),code:url.searchParams.get('code')});audit('google.connected',{service});res.writeHead(302,{Location:'/?connected='+encodeURIComponent(service),'Cache-Control':'no-store'});return res.end();
+  }
   if(path.startsWith('/api/')){
    if(req.method==='POST'){
     const origin=req.headers.origin;
