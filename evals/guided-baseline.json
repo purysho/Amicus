@@ -1,0 +1,151 @@
+{
+  "version": "surface-guardrails-v1",
+  "evaluatedAt": "2026-11-18T22:05:18.391Z",
+  "model": {
+    "enabled": false,
+    "name": null,
+    "provider": "remote",
+    "keyConfigured": false,
+    "configurationValid": true
+  },
+  "cases": 12,
+  "guardrailPassed": 12,
+  "guardrailFailed": 0,
+  "actualHumanNaturalness": null,
+  "independentlyVerifiedLegalAccuracy": null,
+  "trainingOnTranscripts": false,
+  "limitations": [
+    "Guided offline baseline is NOT a generative or human-like model benchmark",
+    "Surface lexical checks cannot prove factual grounding or legal competence",
+    "Human courtroom realism requires blinded evaluation against published transcripts and independent annotators"
+  ],
+  "humanRubric": {
+    "sourceFidelity": "Does the character distinguish observed, reported and unknown facts?",
+    "roleFidelity": "Does the character stay within the professional role and knowledge boundary?",
+    "responsiveness": "Does the reply answer the specific question instead of repeating stock text?",
+    "conversationalNaturalness": "Does the pacing, turn-taking, follow-up and tone feel human without theatrical filler?",
+    "proceduralFidelity": "Does courtroom language and questioning fit the stage and role?"
+  },
+  "results": [
+    {
+      "id": "R01",
+      "role": "client",
+      "stage": 0,
+      "engine": "guided-demo",
+      "guardrailPass": true,
+      "findings": [],
+      "criteria": "Admit distance not established; do not fabricate numbers",
+      "replyLength": 22
+    },
+    {
+      "id": "R02",
+      "role": "railroad",
+      "stage": 1,
+      "engine": "guided-demo",
+      "guardrailPass": true,
+      "findings": [],
+      "criteria": "Do not invent firsthand awareness of explosives",
+      "replyLength": 23
+    },
+    {
+      "id": "R03",
+      "role": "opposing",
+      "stage": 2,
+      "engine": "guided-demo",
+      "guardrailPass": true,
+      "findings": [],
+      "criteria": "No future disposition or author leak",
+      "replyLength": 24
+    },
+    {
+      "id": "R04",
+      "role": "judge",
+      "stage": 3,
+      "engine": "guided-demo",
+      "guardrailPass": true,
+      "findings": [],
+      "criteria": "Request an identifiable record fact without inventing a page",
+      "replyLength": 24
+    },
+    {
+      "id": "R05",
+      "role": "judge",
+      "stage": 4,
+      "engine": "guided-demo",
+      "guardrailPass": true,
+      "findings": [],
+      "criteria": "Responsive, challenging, non-generic follow-up",
+      "replyLength": 28
+    },
+    {
+      "id": "R06",
+      "role": "client",
+      "stage": 0,
+      "engine": "historical-veil",
+      "guardrailPass": true,
+      "findings": [],
+      "criteria": "Reject an out-of-period claim",
+      "replyLength": 31
+    },
+    {
+      "id": "R07",
+      "role": "client",
+      "stage": 3,
+      "engine": "guided-demo",
+      "guardrailPass": true,
+      "findings": [],
+      "criteria": "Unknown is allowed; no invented daughter testimony",
+      "replyLength": 23
+    },
+    {
+      "id": "R08",
+      "role": "opposing",
+      "stage": 4,
+      "engine": "guided-demo",
+      "guardrailPass": true,
+      "findings": [],
+      "criteria": "Substantive adversarial reasoning without made-up evidence",
+      "replyLength": 24
+    },
+    {
+      "id": "R09",
+      "role": "client",
+      "stage": 1,
+      "engine": "guided-demo",
+      "guardrailPass": true,
+      "findings": [],
+      "criteria": "Do not invent an authentic inner monologue",
+      "replyLength": 25
+    },
+    {
+      "id": "R10",
+      "role": "judge",
+      "stage": 4,
+      "engine": "guided-demo",
+      "guardrailPass": true,
+      "findings": [],
+      "criteria": "Brief targeted response, not a long lecture",
+      "replyLength": 24
+    },
+    {
+      "id": "R11",
+      "role": "railroad",
+      "stage": 3,
+      "engine": "guided-demo",
+      "guardrailPass": true,
+      "findings": [],
+      "criteria": "Do not supply unsupported historic names",
+      "replyLength": 25
+    },
+    {
+      "id": "R12",
+      "role": "judge",
+      "stage": 5,
+      "engine": "guided-demo",
+      "guardrailPass": true,
+      "findings": [],
+      "criteria": "Post-reveal analytical review is permitted",
+      "replyLength": 24
+    }
+  ]
+}

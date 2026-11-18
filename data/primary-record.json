@@ -1,0 +1,18 @@
+{
+  "id": "palsgraf-case-on-appeal-1928",
+  "title": "Palsgraf v. Long Island Railroad — case on appeal (record of trial and proceedings)",
+  "kind": "historical-primary-record",
+  "sourceUrl": "https://www.law.berkeley.edu/files/Palsgraf_Record.pdf",
+  "guideUrl": "https://askalawlibrarian.nycourts.gov/legalresearch/faq/433991",
+  "filePagesReported": 44,
+  "provenance": "New York State Courts Law Library references this Berkeley-hosted digitization. Selected page assertions below were manually checked against the scanned page images.",
+  "caution": "1927 witness testimony is an assertion under oath, not independently established truth. Pleading allegations are claims, not adjudicated facts. In-world dialogue is always simulated.",
+  "extracts": [
+    {"id":"rec-proc-1","page":1,"section":"Statement under Rule 234","class":"PROCEDURAL_RECORD","unlocksAt":2,"roleKnowledge":["counsel","judge","opposing"],"text":"The record reports service of the summons on October 2, 1924, service of the complaint on November 14, 1924, and service of the answer on December 3, 1924.","checking":"human-checked-page-summary"},
+    {"id":"rec-pleading-4","page":4,"section":"Complaint — asserted duties","class":"PLEADING_ALLEGATION","unlocksAt":2,"roleKnowledge":["counsel","judge","opposing"],"text":"The complaint alleges that the railroad owed duties concerning passenger safety, platform crowding, employee control, and combustible substances. These are plaintiff's allegations, not proven factual findings.","checking":"human-checked-page-summary"},
+    {"id":"rec-trial-9","page":9,"section":"Trial opening and sworn witness","class":"PROCEDURAL_RECORD","unlocksAt":3,"roleKnowledge":["counsel","judge","opposing"],"text":"Trial proceedings are dated May 25, 1927, in Kings County. Helen Palsgraf was sworn as a witness. The printed record names Matthew W. Wood for plaintiff and Joseph F. Keany for defendant.","checking":"human-checked-page-summary"},
+    {"id":"rec-testimony-10","page":10,"section":"Helen Palsgraf — direct examination","class":"SWORN_TESTIMONY","unlocksAt":3,"roleKnowledge":["client","counsel","judge","opposing"],"text":"Palsgraf testified that she traveled with daughters Elizabeth and Lillian toward Rockaway Beach, bought tickets at East New York, and observed a large crowd on the platform. These statements are attributed testimony.","checking":"human-checked-page-summary"},
+    {"id":"rec-testimony-11","page":11,"section":"Helen Palsgraf — the scales and explosion","class":"SWORN_TESTIMONY","unlocksAt":3,"roleKnowledge":["client","counsel","judge","opposing"],"text":"Palsgraf testified she heard an explosion and firecracker-like noise; she described flying glass, smoke, and platform scales striking her. This is her reported account, not independent proof of every detail.","checking":"human-checked-page-summary"},
+    {"id":"rec-testimony-12","page":12,"section":"Helen Palsgraf — immediate aftermath","class":"SWORN_TESTIMONY","unlocksAt":3,"roleKnowledge":["client","counsel","judge","opposing"],"text":"Palsgraf testified about seeking help for her daughters and being examined by an ambulance doctor; she said she did not know the name of a later railroad doctor who examined her.","checking":"human-checked-page-summary"}
+  ]
+}

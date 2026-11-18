@@ -12,9 +12,9 @@ export function initialState(demo=true){
  return {
   mode:demo?'demo':'fresh', student:{name:demo?'Demo student':'', year:demo?'1L':'',school:'', city:'',interest:'Litigation'},
   mastery:{duty:{correct:3,total:5,confidence:'low',history:[]},'proximate-cause':{correct:2,total:5,confidence:'low',history:[]},advocacy:{correct:1,total:3,confidence:'low',history:[]}},
-  assessments:[], practiceEvidence:[], courses: demo?[{id:'torts',name:'Torts',description:'Negligence · Duty · Scope of liability',status:'demo seed'}]:[],
+  assessments:[], practiceEvidence:[],reasoningEvidence:[], courses: demo?[{id:'torts',name:'Torts',description:'Negligence · Duty · Scope of liability',status:'demo seed'}]:[],
   sim:{stage:0, side:'plaintiff',mode:'historical',role:'client',transcript:[],work:[],reviews:[],notes:'',reversed:false},
-  permissions:{'email.send':'ask','calendar.write':'ask','events.book':'ask','draft.create':'allow','documents.read':'allow','simulation.respond':'allow','model.remote':'ask','events.read':'allow','people.research':'ask','calendar.read':'ask','gmail.draft':'ask'},
+  permissions:{'email.send':'ask','calendar.write':'ask','events.book':'ask','draft.create':'allow','documents.read':'allow','simulation.respond':'allow','model.remote':'ask','events.read':'allow','people.research':'ask','calendar.read':'ask','gmail.draft':'ask','legal.external':'ask'},
   contacts:[], drafts:[], events:[], tasks:[], activity:[], createdAt:new Date().toISOString()
  };
 }
@@ -26,7 +26,7 @@ export function assess(state, id, answer) {
  const prior=state.assessments.find(x=>x.id===id);
  if(prior) return {correct:prior.correct,repeat:true,explanation:item.explanation,score:scoreFor(state.mastery[item.topic])};
  const correct=answer===item.correct;
- state.assessments.push({id,topic:item.topic,answer,correct,at:new Date().toISOString(),method:'deterministic-choice-key'});
+ state.assessments.push({id,topic:item.topic,context:item.context||item.id,answer,correct,at:new Date().toISOString(),method:'deterministic-choice-key'});
  const m=state.mastery[item.topic]??(state.mastery[item.topic]={correct:0,total:0,history:[]});
  m.total+=1;if(correct)m.correct+=1;
  m.history.push({assessmentId:id,correct,at:new Date().toISOString()});
@@ -75,3 +75,8 @@ export function evidenceAudit(state){return {
   skillEstimates:Object.fromEntries(Object.entries(state.mastery).map(([k,v])=>[k,{score:scoreFor(v),confidence:v.confidence,evidence:v.history.length}]))
 };}
 export function appendActivity(state,kind,detail){state.activity.unshift({id:`evt-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,kind,detail,at:new Date().toISOString()});state.activity=state.activity.slice(0,200);}
+
+export function publicAssessments(state){return ASSESSMENTS.map(({correct,...item})=>({
+ ...item,...(state.assessments.some(a=>a.id===item.id)?{correct}:{}),
+ ...((state.assessments.find(a=>a.id===item.id))?{completed:true}:{completed:false})
+}));}

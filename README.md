@@ -1,6 +1,6 @@
 # Amicus — a personal Law Student OS
 
-**Status:** v0.5.0 evidence-first vertical slice; an experimental local prototype, not a legal research service or a production legal assistant.
+**Status:** v0.6.0 evidence-first vertical slice; an experimental local prototype, not a legal research service or a production legal assistant.
 
 Amicus is a US 1L–3L personal operating system that connects study, evidence-backed progress, a historically grounded *Palsgraf* simulation, professional communications, and privacy controls. It is built for **one real student**, with an optional synthetic demo profile.
 
@@ -39,6 +39,15 @@ AMICUS_MODEL=your-local-model-id
 
 **Do not paste API keys into the browser UI or commit `.env`.** Local runtime config and the SQLite database are ignored by Git.
 
+## v0.6: evidence, citations, competence, realism
+
+- **Real historical record evidence:** the *Palsgraf* matter now contains page-checked summaries of the actual trial/appeal record, clearly differentiating pleadings, witness testimony and procedural entries. The 44-page scan can be imported locally using Poppler + Tesseract. Imported OCR is labeled **unverified**; uploaded source authenticity is not guaranteed.
+- **Claim/citation challenge:** checks bibliographic identity, stage-specific time restrictions and optional OCR quotation matching. Optional CourtListener citation lookup requires `COURTLISTENER_API_TOKEN` and the `LEGAL.EXTERNAL` user permission. **These checks do NOT prove good-law status or that the claim follows from the authority.**
+- **Digital Twin improvements:** measured evidence excludes synthetic demo priors; written novel-transfer answers are preserved with rubrics, without assigning fake grades.
+- **Courtroom quality evaluation:** transcript-turn diagnostics and a 12-case adversarial fixture pack; `npm run eval:realism` reports surface checks only, not measured human likeness.
+
+Read [docs/LEGAL_INTELLIGENCE_V06.md](docs/LEGAL_INTELLIGENCE_V06.md) before relying on a result.
+
 ## First route through the demo
 
 1. From **Overview**, take a novel duty/scope transfer assessment (deterministic scoring with auditable history; repeated exact items don't count twice).
@@ -58,10 +67,10 @@ AMICUS_MODEL=your-local-model-id
 | Role-specific model conversations | Model adapter works **when provider configured**; otherwise labelled guided fallback; naturalness not validated |
 | Historical evidence unlock, stage progression and role-scoped conversation memory | Working simplified workflow; model leaks are not formally impossible |
 | Work-product review and cross-module formative learning evidence | Working guided offline checklist / structured AI feedback when configured; **no calibrated grading** |
-| Historical source linking and post-1928 reveal | Working; links verified; **full trial record not ingested** |
+| Historical source linking, page-checked record summaries, conditional 44-page OCR import | Working with manual steps; OCR is unverified and not authenticated to a master checksum |
 | Networking email drafts and contact CRM | Purpose-first editable drafts, contacts, interactions and tasks; local and auditable |
 | Legal event discovery | Official Texas Law live ICS adapter, approved school feeds, local ICS import and relevance ranking. **No booking/registration API** |
-| Automated adversarial citation verification, semantic grading | **Not implemented** |
+| Citation identity / historical chronology / OCR quote mismatch challenge | Working fail-closed partial verifier; substantive support, treatment and semantic grading **not implemented** |
 | Gmail / Calendar | Optional real Google OAuth adapters; encrypted local refresh credentials; no live-account acceptance test |
 | Speaker research | Consent-gated public Wikipedia candidate lookup, **not verified identities** |
 | Semantic/vector RAG, voice, courtroom transcript fine-tuning, OCR | **Not implemented** |
@@ -74,12 +83,14 @@ AMICUS_MODEL=your-local-model-id
 - [`docs/LOCAL_RETRIEVAL.md`](docs/LOCAL_RETRIEVAL.md) — indexed text search, citations, permission boundaries, and limitations.
 - [`docs/CAREER_AND_INTEGRATIONS.md`](docs/CAREER_AND_INTEGRATIONS.md) — live feeds, CRM, Minto drafts, Google setup, permissions, failure modes and limitations.
 - [`docs/CASE_FEEDBACK.md`](docs/CASE_FEEDBACK.md) — model feedback limits, case-work evidence, and character conversation isolation.
+- [`docs/LEGAL_INTELLIGENCE_V06.md`](docs/LEGAL_INTELLIGENCE_V06.md) — primary record provenance, citation challenge, competency validity, and realism evaluation.
 - [`tests/`](tests/) — executable baseline tests.
 
 ## Testing
 
 ```bash
 npm test
+npm run eval:realism
 ```
 
 This app is for **educational simulation**, not legal advice. AI-generated dialogue is not historical testimony. The real student should never treat practice scores as an accurate grade forecast without rigorous calibration. Any live model can hallucinate despite prompt constraints; recheck primary sources before relying on legal assertions.

@@ -20,7 +20,7 @@ test('clicking Case simulation renders the historical matter instead of a blank 
     model:{enabled:false,provider:'offline'},
     assessments:ASSESSMENTS,
     caseInfo:{stages:CASE.history,stage:CASE.history[0],facts:visibleFacts(student.sim),sources:visibleSources(student.sim),reveal:null},
-    evidence:{visibleFacts:visibleFacts(student.sim).length,outcomeSealed:true},
+    evidence:{visibleFacts:visibleFacts(student.sim).length,outcomeSealed:true},primaryRecord:{extracts:[],imported:false,pageCount:0},realism:{turns:0,passed:0,failed:0,checks:[],rubric:{}},competencies:[{skill:'duty',readiness:'insufficient independent evidence',correct:0,objectiveCount:0,uniqueContexts:0,writtenCount:0,measuredPercent:null,challenge:'Complete transfer'}],transferExercises:[{id:'test',title:'Counterfactual facts',skill:'duty',prompt:'What rule applies?'}],
     documents:[],audit:[]
   };
   const document = {
@@ -41,4 +41,10 @@ test('clicking Case simulation renders the historical matter instead of a blank 
   assert.match(getNode('#view').innerHTML,/Evidence ledger/);
   assert.match(getNode('#view').innerHTML,/Show review checklist/);
   assert.equal(getNode('#crumb-title').textContent,'Case simulation');
+  assert.match(getNode('#view').innerHTML,/Authentic 1927 trial record/);
+  await handlers.get('click')({target:{closest:(selector)=>selector==='[data-tab]'?{dataset:{tab:'study'}}:null}});
+  assert.match(getNode('#view').innerHTML,/Adversarial transfer/);
+  await handlers.get('click')({target:{closest:(selector)=>selector==='[data-tab]'?{dataset:{tab:'research'}}:null}});
+  assert.match(getNode('#view').innerHTML,/Claim & citation challenge/);
+
 });

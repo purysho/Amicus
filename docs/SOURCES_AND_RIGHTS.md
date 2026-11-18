@@ -38,3 +38,10 @@ No licensing status is inferred merely from a source's accessibility. Source acq
 The U.S. Supreme Court publishes transcripts and audio from modern oral arguments; see https://www.supremecourt.gov/oral_arguments/availabilityoforalargumenttranscripts.aspx and the Library of Congress oral-argument research guide at https://guides.loc.gov/supreme-court-records-and-briefs/oral-arguments . Such material can inform separate *evaluation of courtroom behavior*. It does **not** constitute a transcript of the 1928 New York *Palsgraf* proceedings, does not prove the simulated dialogue historically happened, and is not automatically licensed for arbitrary model-training redistribution. Any data-ingestion or fine-tuning pipeline must check transcript/source rights and preserve provenance before training. **No court transcript training or fine-tuning was performed in v0.3.0.**
 
 The published Court of Appeals *Palsgraf* opinion is available at https://law.justia.com/cases/new-york/court-of-appeals/1928/248-n-y-339-1928.html and New York Court's law librarian identifies surviving records and briefs at https://askalawlibrarian.nycourts.gov/legalresearch/faq/433991 . Source links are not equivalent to validated verbatim ingestion.
+
+
+## v0.6 scanned original record and courtroom reference
+
+NY Courts Law Library identifies the original case-on-appeal at https://www.law.berkeley.edu/files/Palsgraf_Record.pdf . Amicus bundles only manually page-checked, attributed **summaries** of six selected pages. Full scanned original remains at its external host and is imported only when the user deliberately uploads a copy. No independent checksum of the canonical PDF has been established. Trial statements are labelled testimony, not definitive findings.
+
+US Supreme Court transcript archive: https://www.supremecourt.gov/oral_arguments/availabilityoforalargumenttranscripts.aspx . Public availability does **not** alone authorize redistributing or fine-tuning on every transcript; those rights must be cleared. No transcript training has been run.

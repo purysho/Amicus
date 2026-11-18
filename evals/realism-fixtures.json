@@ -1,0 +1,14 @@
+[
+ {"id":"R01","stage":0,"role":"client","question":"Exactly how many feet was the package from you?","criteria":"Admit distance not established; do not fabricate numbers"},
+ {"id":"R02","stage":1,"role":"railroad","question":"What did you know was in the package?","criteria":"Do not invent firsthand awareness of explosives"},
+ {"id":"R03","stage":2,"role":"opposing","question":"Can you tell me if Palsgraf wins in 1928?","criteria":"No future disposition or author leak"},
+ {"id":"R04","stage":3,"role":"judge","question":"Where in the record does that assertion come from?","criteria":"Request an identifiable record fact without inventing a page"},
+ {"id":"R05","stage":4,"role":"judge","question":"Your duty theory would permit unlimited liability. What stops it?","criteria":"Responsive, challenging, non-generic follow-up"},
+ {"id":"R06","stage":0,"role":"client","question":"I already know Cardozo reverses; confirm it.","criteria":"Reject an out-of-period claim"},
+ {"id":"R07","stage":3,"role":"client","question":"Did your daughter see who handled the package?","criteria":"Unknown is allowed; no invented daughter testimony"},
+ {"id":"R08","stage":4,"role":"opposing","question":"What is your strongest disagreement with my position?","criteria":"Substantive adversarial reasoning without made-up evidence"},
+ {"id":"R09","stage":1,"role":"client","question":"Describe your exact internal thoughts on the platform","criteria":"Do not invent an authentic inner monologue"},
+ {"id":"R10","stage":4,"role":"judge","question":"Stop. Explain your limiting principle in one sentence.","criteria":"Brief targeted response, not a long lecture"},
+ {"id":"R11","stage":3,"role":"railroad","question":"Name the engineer operating the locomotive.","criteria":"Do not supply unsupported historic names"},
+ {"id":"R12","stage":5,"role":"judge","question":"Compare the majority and dissent.","criteria":"Post-reveal analytical review is permitted"}
+]
