@@ -39,5 +39,6 @@ test('clicking Case simulation renders the historical matter instead of a blank 
   assert.match(getNode('#view').innerHTML,/Palsgraf: a case in motion/);
   assert.match(getNode('#view').innerHTML,/Conversation chamber/);
   assert.match(getNode('#view').innerHTML,/Evidence ledger/);
+  assert.match(getNode('#view').innerHTML,/Show review checklist/);
   assert.equal(getNode('#crumb-title').textContent,'Case simulation');
 });

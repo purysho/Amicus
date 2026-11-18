@@ -1,10 +1,12 @@
 # Amicus — a personal Law Student OS
 
-**Status:** v0.3.0 evidence-first vertical slice; an experimental local prototype, not a legal research service or a production legal assistant.
+**Status:** v0.4.0 evidence-first vertical slice; an experimental local prototype, not a legal research service or a production legal assistant.
 
 Amicus is a US 1L–3L personal operating system that connects study, evidence-backed progress, a historically grounded *Palsgraf* simulation, professional communications, and privacy controls. It is built for **one real student**, with an optional synthetic demo profile.
 
-**v0.3.0 upgrade:** Local full-text passage search for uploaded documents, passage/page citations to retrieved excerpts, retrieval-grounded tutoring, backward indexing of existing `.local/amicus.db` uploads, and conservative quarantine of Palsgraf-related documents while the historical outcome is sealed. The 0.2.1 Case Simulation fix remains included. **No legal claim-level verification or fine-tuning has been performed.**
+**v0.3.0 foundation:** Local full-text passage search for uploaded documents, passage/page citations to retrieved excerpts, retrieval-grounded tutoring, backward indexing of existing `.local/amicus.db` uploads, and conservative quarantine of Palsgraf-related documents while the historical outcome is sealed. The 0.2.1 Case Simulation fix remains included. **No legal claim-level verification or fine-tuning has been performed.**
+
+**v0.4.0 upgrade:** Case-work formative review after saving a stage work product (AI-generated structured feedback when configured; otherwise an honest offline checklist); evidence references verified against disclosed fact IDs; case review evidence stored separately from mastery grades; no duplicate credit for re-reviewing unchanged work; role-and-stage isolated conversational memory; `Start Fresh` now wipes the audit log as well as uploaded files and student state.
 
 ## Run locally (Windows, macOS or Linux)
 
@@ -40,7 +42,7 @@ AMICUS_MODEL=your-local-model-id
 1. From **Overview**, take a novel duty/scope transfer assessment (deterministic scoring with auditable history; repeated exact items don't count twice).
 2. Open **Palsgraf**; choose a side, interview simulated characters, inspect evidence with provenance and record a real work product at each stage before advancing.
 3. Traverse the **historical veil**: facts unlock by stage; final reported opinions unlock only after the appellate argument.
-4. Compare competing legal approaches, perform role reversal, and export personal data if desired.
+4. After saving a case-work product, click **Show review checklist** (offline) or **Request AI feedback** (model configured); inspect which disclosed fact IDs the reviewer used. Compare competing legal approaches, perform role reversal, and export personal data if desired.
 5. Upload a `.txt` or `.md` course excerpt (PDF extraction works when **Poppler `pdftotext`** is installed); search the text from **Research vault** and ask the tutor a related question to see retrieved passage references. Draft a networking email and inspect permissions and the audit history.
 
 ## Implemented versus not implemented
@@ -52,7 +54,8 @@ AMICUS_MODEL=your-local-model-id
 | Digital Twin evidence log & repeat-resistant multiple-choice assessments | Working prototype; heuristic/synthetic prior, **not calibrated** |
 | Text/Markdown import, text-PDF extraction and local passage search | Working; PDF requires Poppler; scanned PDFs need later OCR |
 | Role-specific model conversations | Model adapter works **when provider configured**; otherwise labelled guided fallback; naturalness not validated |
-| Historical evidence unlock & stage progression | Working simplified workflow |
+| Historical evidence unlock, stage progression and role-scoped conversation memory | Working simplified workflow; model leaks are not formally impossible |
+| Work-product review and cross-module formative learning evidence | Working guided offline checklist / structured AI feedback when configured; **no calibrated grading** |
 | Historical source linking and post-1928 reveal | Working; links verified; **full trial record not ingested** |
 | Networking email draft | Working template; **never sends** |
 | Events and legal research | Verified source directories only; no live search/booking/citator yet |
@@ -65,6 +68,7 @@ AMICUS_MODEL=your-local-model-id
 - [`docs/SOURCES_AND_RIGHTS.md`](docs/SOURCES_AND_RIGHTS.md) — historical record, real transcripts, attribution and licensing.
 - [`docs/AI_BEHAVIOR.md`](docs/AI_BEHAVIOR.md) — character constraints, safety and evaluations.
 - [`docs/LOCAL_RETRIEVAL.md`](docs/LOCAL_RETRIEVAL.md) — indexed text search, citations, permission boundaries, and limitations.
+- [`docs/CASE_FEEDBACK.md`](docs/CASE_FEEDBACK.md) — model feedback limits, case-work evidence, and character conversation isolation.
 - [`tests/`](tests/) — executable baseline tests.
 
 ## Testing

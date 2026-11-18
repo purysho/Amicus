@@ -12,8 +12,8 @@ export function initialState(demo=true){
  return {
   mode:demo?'demo':'fresh', student:{name:demo?'Demo student':'', year:demo?'1L':'',school:'', city:'',interest:'Litigation'},
   mastery:{duty:{correct:3,total:5,confidence:'low',history:[]},'proximate-cause':{correct:2,total:5,confidence:'low',history:[]},advocacy:{correct:1,total:3,confidence:'low',history:[]}},
-  assessments:[], courses: demo?[{id:'torts',name:'Torts',description:'Negligence · Duty · Scope of liability',status:'demo seed'}]:[],
-  sim:{stage:0, side:'plaintiff',mode:'historical',role:'client',transcript:[],work:[],notes:'',reversed:false},
+  assessments:[], practiceEvidence:[], courses: demo?[{id:'torts',name:'Torts',description:'Negligence · Duty · Scope of liability',status:'demo seed'}]:[],
+  sim:{stage:0, side:'plaintiff',mode:'historical',role:'client',transcript:[],work:[],reviews:[],notes:'',reversed:false},
   permissions:{'email.send':'ask','calendar.write':'ask','events.book':'ask','draft.create':'allow','documents.read':'allow','simulation.respond':'allow','model.remote':'ask'},
   contacts:[], drafts:[], events:[], activity:[], createdAt:new Date().toISOString()
  };
@@ -62,7 +62,7 @@ export function roleSwitch(state){
  if(state.sim.stage!==STAGE_COUNT-1)throw new Error('Role reversal unlocks after the historical reveal.');
  const previous=state.sim.work.map(x=>x.text).join('\n').slice(-3000);
  state.sim.side=state.sim.side==='plaintiff'?'railroad':'plaintiff';
- state.sim.stage=0;state.sim.reversed=true;state.sim.work=[];state.sim.transcript=[];state.sim.role='client';
+ state.sim.stage=0;state.sim.reversed=true;state.sim.work=[];state.sim.reviews=[];state.sim.transcript=[];state.sim.role='client';
  return {previousArguments:previous,side:state.sim.side};
 }
 export function evidenceAudit(state){return {
@@ -71,6 +71,7 @@ export function evidenceAudit(state){return {
   totalHistoricalFacts:CASE.facts.length,
   sourceLinks:visibleSources(state.sim).length,
   sourcedFacts:CASE.facts.every(f=>CASE.sources.some(s=>s.id===f.source)),
+  practiceEvidenceCount:state.practiceEvidence?.length||0,
   skillEstimates:Object.fromEntries(Object.entries(state.mastery).map(([k,v])=>[k,{score:scoreFor(v),confidence:v.confidence,evidence:v.history.length}]))
 };}
 export function appendActivity(state,kind,detail){state.activity.unshift({id:`evt-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,kind,detail,at:new Date().toISOString()});state.activity=state.activity.slice(0,200);}

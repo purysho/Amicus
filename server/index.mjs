@@ -5,8 +5,8 @@ import {join,extname,resolve} from 'node:path';
 import {spawnSync} from 'node:child_process';
 import {existsSync} from 'node:fs';
 import {CASE, ASSESSMENTS,initialState,assess,visibleFacts,visibleSources,advance,submitWork,roleSwitch,evidenceAudit,appendActivity} from './engine.mjs';
-import {readState,saveState,resetState,listDocs,getDoc,addDoc,searchDocuments,audit,latestAudit} from './db.mjs';
-import {simulationResponse,tutoringResponse,modelStatus} from './ai.mjs';
+import {readState,saveState,resetState,listDocs,getDoc,addDoc,searchDocuments,audit,latestAudit,allAudit} from './db.mjs';
+import {simulationResponse,tutoringResponse,reviewSimulationWork,modelStatus} from './ai.mjs';
 if(existsSync('.env')){try{process.loadEnvFile('.env');}catch(e){console.warn('Could not read .env:',e.message);}}
 const port=Number(process.env.PORT||4173);const root=resolve('public');
 const mime={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.svg':'image/svg+xml'};
@@ -38,7 +38,7 @@ function draftEmail(body){const to=String(body.to||'').trim(),person=requireStri
  return {to,subject,text,format:'Minto-inspired: purpose first, supporting detail, specific request',status:'DRAFT — not sent',requiresApproval:true};}
 async function api(req,res,path){
  if(req.method==='GET'&&path==='/api/state')return json(res,stateView());
- if(req.method==='GET'&&path==='/api/health')return json(res,{ok:true,version:'0.3.0',model:modelStatus()});
+ if(req.method==='GET'&&path==='/api/health')return json(res,{ok:true,version:'0.4.0',model:modelStatus()});
  if(req.method==='GET'&&path.startsWith('/api/documents/')){const id=decodeURIComponent(path.split('/').at(-1));const state=readState();ensureCapability(state,'documents.read');const doc=getDoc(id);if(!doc)throw new ApiError(404,'Document not found');return json(res,{...doc,body:doc.body.slice(0,40000)});}
  if(req.method!=='POST')throw new ApiError(404,'No such API route');
  const body=await readBody(req);
@@ -51,15 +51,31 @@ async function api(req,res,path){
   state.sim.side=body.side;state.sim.mode=body.mode;if(['client','railroad','counsel','judge'].includes(body.role))state.sim.role=body.role;return state.sim;}));
  if(path==='/api/sim/role')return json(res,mutate('simulation.role',{role:body.role},state=>{const allowed=state.sim.stage>=3?['judge','opposing']:['client','railroad','opposing'];if(!allowed.includes(body.role))throw new ApiError(400,'Role is not available at this stage');state.sim.role=body.role;return body.role;}));
  if(path==='/api/sim/work')return json(res,mutate('simulation.work',{stage:readState().sim.stage},state=>submitWork(state,body.text)));
+ if(path==='/api/sim/review'){
+  const state=readState();ensureCapability(state,'simulation.respond');
+  if(modelStatus().enabled&&modelStatus().provider==='remote'&&state.permissions['model.remote']!=='allow')throw new ApiError(403,'Remote review requires model.remote permission.');
+  const latest=[...state.sim.work].reverse().find(w=>w.stage===state.sim.stage);
+  if(!latest)throw new ApiError(400,'Submit a work product at this stage before requesting feedback.');
+  const existing=state.sim.reviews?.find(x=>x.workId===latest.id);
+  if(existing)return json(res,{value:{...existing,repeat:true},...stateView()});
+  const result=await reviewSimulationWork(state);
+  return json(res,mutate('simulation.review',{stage:state.sim.stage,engine:result.kind},s=>{
+   if(s.sim.stage!==state.sim.stage||!s.sim.work.some(w=>w.id===latest.id))throw new ApiError(409,'Case stage or work changed during review.');
+   const item={...result,id:`review-${Date.now()}`,stage:s.sim.stage,workId:latest.id,at:new Date().toISOString(),side:s.sim.side};
+   s.sim.reviews??=[];s.sim.reviews.push(item);
+   s.practiceEvidence??=[];s.practiceEvidence.push({id:item.id,competency:'legal-analysis',context:'case-work',sourceId:latest.id,stage:item.stage,kind:item.kind,at:item.at,masteryImpact:'none — formative review only'});
+   return item;
+  }));
+ }
  if(path==='/api/sim/advance')return json(res,mutate('simulation.advance',{},state=>advance(state)));
  if(path==='/api/sim/reverse')return json(res,mutate('simulation.reverse',{},state=>roleSwitch(state)));
  if(path==='/api/sim/talk'){
   ensureCapability(readState(),'simulation.respond');
   const text=requireString(body.text,3000);const state=readState();
   if(modelStatus().enabled&&modelStatus().provider==='remote'&&state.permissions['model.remote']!=='allow')throw new ApiError(403,'Remote AI requires permission. Open Data & controls and set model.remote to ALLOW, or use a local model.');
-  if(state.sim.stage===5){const answer={text:'The historical reveal is open. Compare your argument with the actual reported opinions. For practice, use role reversal to defend the opposite position.',engine:'reveal'};return json(res,mutate('simulation.talk',{role:'reveal'},s=>{s.sim.transcript.push({role:'user',content:text},{role:'assistant',content:answer.text,engine:answer.engine});return answer;}));}
+  if(state.sim.stage===5){const answer={text:'The historical reveal is open. Compare your argument with the actual reported opinions. For practice, use role reversal to defend the opposite position.',engine:'reveal'};return json(res,mutate('simulation.talk',{role:'reveal'},s=>{s.sim.transcript.push({role:'user',content:text,speakerRole:s.sim.role,stage:s.sim.stage},{role:'assistant',content:answer.text,engine:answer.engine,speakerRole:s.sim.role,stage:s.sim.stage});return answer;}));}
   const response=await simulationResponse(state,text);
-  return json(res,mutate('simulation.talk',{stage:state.sim.stage,engine:response.engine},s=>{if(s.sim.stage!==state.sim.stage)throw new ApiError(409,'Simulation stage changed');s.sim.transcript.push({role:'user',content:text},{role:'assistant',content:response.text,engine:response.engine});s.sim.transcript=s.sim.transcript.slice(-90);return response;}));
+  return json(res,mutate('simulation.talk',{stage:state.sim.stage,engine:response.engine},s=>{if(s.sim.stage!==state.sim.stage||s.sim.role!==state.sim.role)throw new ApiError(409,'Simulation stage or interlocutor changed');s.sim.transcript.push({role:'user',content:text,speakerRole:s.sim.role,stage:s.sim.stage},{role:'assistant',content:response.text,engine:response.engine,speakerRole:s.sim.role,stage:s.sim.stage});s.sim.transcript=s.sim.transcript.slice(-90);return response;}));
  }
  if(path==='/api/research/search'){const state=readState();ensureCapability(state,'documents.read');const query=requireString(body.query,500);const hits=searchDocuments(query,8,{historicalVeil:state.sim.stage<5});audit('research.search',{termCount:query.trim().split(/\s+/).length,hits:hits.length});return json(res,{query,scope:'local-imported-documents',hits,historicalVeil:state.sim.stage<5,verification:'passage-locators-only; Palsgraf-related uploads quarantined while outcome is sealed; legal propositions NOT independently verified'});}
  if(path==='/api/tutor/talk'){
@@ -72,7 +88,7 @@ async function api(req,res,path){
  if(path==='/api/documents'){ensureCapability(readState(),'documents.read');return json(res,await ingest(body));}
  if(path==='/api/drafts')return json(res,mutate('draft.create',{person:body.person},state=>{ensureCapability(state,'draft.create');const draft={...draftEmail(body),id:`draft-${Date.now()}`,createdAt:new Date().toISOString()};state.drafts.unshift(draft);return draft;}));
  if(path==='/api/permissions')return json(res,mutate('permission.change',{capability:body.capability,value:body.value},state=>{if(!(body.capability in state.permissions)||!['allow','ask','deny'].includes(body.value))throw new ApiError(400,'Invalid permission');state.permissions[body.capability]=body.value;return state.permissions;}));
- if(path==='/api/export')return json(res,{state:readState(),documents:listDocs().map(d=>getDoc(d.id)),audit:latestAudit(),exportedAt:new Date().toISOString()});
+ if(path==='/api/export')return json(res,{state:readState(),documents:listDocs().map(d=>getDoc(d.id)),audit:allAudit(),exportedAt:new Date().toISOString()});
  throw new ApiError(404,'No such API route');
 }
 const server=createServer(async(req,res)=>{

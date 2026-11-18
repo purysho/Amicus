@@ -16,7 +16,11 @@ const indexedIds=new Set(db.prepare('SELECT DISTINCT doc_id FROM document_passag
 for(const document of db.prepare('SELECT id,body FROM documents').all())if(!indexedIds.has(document.id))indexDocument(document);
 export function readState(){const row=db.prepare('SELECT json FROM state WHERE id=1').get();return row?JSON.parse(row.json):initialState(true);}
 export function saveState(state){db.prepare(`INSERT INTO state(id,json,version) VALUES(1,?,1) ON CONFLICT(id) DO UPDATE SET json=excluded.json, version=version+1`).run(JSON.stringify(state));}
-export function resetState(demo){const state=initialState(demo);saveState(state);db.prepare('DELETE FROM document_passages').run();db.prepare('DELETE FROM documents').run();return state;}
+export function resetState(demo){
+ const state=initialState(demo);db.exec('BEGIN');
+ try{saveState(state);db.prepare('DELETE FROM document_passages').run();db.prepare('DELETE FROM documents').run();db.prepare('DELETE FROM activity').run();db.exec('COMMIT');return state;}
+ catch(error){db.exec('ROLLBACK');throw error;}
+}
 export function listDocs(){return db.prepare('SELECT id,name,type,created,length(body) AS size FROM documents ORDER BY created DESC').all();}
 export function getDoc(id){return db.prepare('SELECT * FROM documents WHERE id=?').get(id);}
 function indexDocument(doc){
@@ -44,4 +48,6 @@ export function searchDocuments(query,limit=5,options={}){
 }
 
 export function audit(type,payload){db.prepare('INSERT INTO activity(time,type,payload) VALUES(?,?,?)').run(new Date().toISOString(),type,JSON.stringify(payload));}
-export function latestAudit(){return db.prepare('SELECT id,time,type,payload FROM activity ORDER BY id DESC LIMIT 100').all().map(row=>({...row,payload:JSON.parse(row.payload)}));}
+function parseAudit(rows){return rows.map(row=>({...row,payload:JSON.parse(row.payload)}));}
+export function latestAudit(){return parseAudit(db.prepare('SELECT id,time,type,payload FROM activity ORDER BY id DESC LIMIT 100').all());}
+export function allAudit(){return parseAudit(db.prepare('SELECT id,time,type,payload FROM activity ORDER BY id DESC').all());}

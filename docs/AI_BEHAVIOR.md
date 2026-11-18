@@ -27,3 +27,7 @@ The initial `server/engine.mjs` tests verify deterministic stage and mastery inv
 ## v0.3 model-interface tests
 
 A local mock OpenAI-compatible model endpoint is used in `tests/model.test.mjs`. Tests inspect the role- and stage-specific system prompt, assert that pre-reveal opinion text is not included in that prompt, and deliberately return an outcome leak to verify that a deterministic output guard withholds it. The same mock tests the tutor's treatment of an uploaded prompt injection as document data. **This is not a real-model human-likeness benchmark.** Genuine blinded evaluators, procedural/objection realism tests, and licensed transcript selection remain pending.
+
+## v0.4 context isolation and work-product review
+
+A simulation transcript turn now records the character role and stage. The model receives only prior turns with that exact role and stage; older unlabelled turns remain in local UI history but are not re-fed into an agent. A separate formative work-product reviewer runs from disclosed facts and returns structured feedback without pretending to be an independent, calibrated legal grader. Review evidence is separated from multiple-choice mastery. See `CASE_FEEDBACK.md`.
