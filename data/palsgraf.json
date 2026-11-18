@@ -1,0 +1,36 @@
+{
+  "title": "Palsgraf v. Long Island Railroad Co.",
+  "citation": "248 N.Y. 339 (1928)",
+  "incidentDate": "1924-08-24",
+  "history": [
+    {"id":"incident","title":"Initial consultation","date":"August 24, 1924","instruction":"Interview the client or railroad representative and identify what must be investigated. Do not assume evidence not in the record."},
+    {"id":"investigation","title":"Investigation","date":"1924–1927","instruction":"Examine the incident, distinguish observations from inference, and develop a viable negligence theory."},
+    {"id":"pleadings","title":"Theory & pleadings","date":"Before trial","instruction":"State the client's claim or defense. Identify duty, breach, causation and injury, and the strongest counterargument."},
+    {"id":"trial","title":"Trial advocacy","date":"1927","instruction":"Prepare a short oral submission and respond to questions from the trial judge; distinguish facts from speculation."},
+    {"id":"appeal","title":"Court of Appeals","date":"February 24, 1928","instruction":"Make a concise appellate argument from the disclosed record. The eventual 1928 disposition remains sealed."},
+    {"id":"reveal","title":"Historical reveal & review","date":"May 29, 1928","instruction":"Compare arguments to the actual decision. Discuss Cardozo's majority and Andrews's dissent, then consider a role reversal."}
+  ],
+  "sources": [
+    {"id":"ny-library","title":"New York Courts Law Library — Palsgraf records and briefs","type":"official-guide","date":"2026-05-14","url":"https://askalawlibrarian.nycourts.gov/legalresearch/faq/433991","status":"verified-link","unlock":0,"note":"Official guide to record and reported proceedings. The linked historical record has not been ingested verbatim."},
+    {"id":"ad-1927","title":"Palsgraf, 222 A.D. 166 (N.Y. App. Div. 1927)","type":"reported-decision","date":"1927-12-16","url":"https://www.neochart.com/catalog/cases/ad/volume_222/0166_01/index.html","status":"verified-link","unlock":4,"note":"Published intermediate appellate opinion; available once the simulation approaches appeal."},
+    {"id":"ny-1928","title":"Palsgraf, 248 N.Y. 339 (N.Y. 1928)","type":"reported-decision","date":"1928-05-29","url":"https://law.justia.com/cases/new-york/court-of-appeals/1928/248-n-y-339-1928.html","status":"verified-link","unlock":5,"note":"The historical outcome and competing opinions are sealed until reveal."},
+    {"id":"umn","title":"University of Minnesota Law Library — Classic Cases: Palsgraf","type":"academic-curation","date":"1928","url":"https://lawlibrarycollections.umn.edu/classic-cases-tort-palsgraf-v-long-island-railroad-co","status":"verified-link","unlock":5,"note":"Secondary academic explanation, deliberately held until reveal."},
+    {"id":"berkeley-record","title":"Historical record and briefs (Berkeley-hosted PDF)","type":"historical-record","date":"1928","url":"https://www.law.berkeley.edu/files/Palsgraf_Record.pdf","status":"linked-not-ingested","unlock":4,"note":"Linked by New York Courts Law Library; reading this PDF is not equivalent to an authenticated historical oral argument transcript."}
+  ],
+  "facts": [
+    {"id":"f1","text":"The incident took place at the East New York station on August 24, 1924.","classification":"HISTORICAL","source":"ad-1927","unlocksAt":0,"knownBy":["client","railroad","counsel","judge"]},
+    {"id":"f2","text":"Helen Palsgraf was waiting on the platform as a passenger.","classification":"HISTORICAL","source":"ny-1928","unlocksAt":0,"knownBy":["client","railroad","counsel","judge"]},
+    {"id":"f3","text":"Railroad employees were assisting a passenger who was attempting to board a train.","classification":"HISTORICAL","source":"ny-1928","unlocksAt":1,"knownBy":["client","railroad","counsel","judge"]},
+    {"id":"f4","text":"A package carried by the boarding passenger fell from his possession.","classification":"HISTORICAL","source":"ny-1928","unlocksAt":1,"knownBy":["railroad","counsel","judge"]},
+    {"id":"f5","text":"The package contained fireworks that exploded after it fell.","classification":"HISTORICAL","source":"ny-1928","unlocksAt":1,"knownBy":["client","railroad","counsel","judge"]},
+    {"id":"f6","text":"The package's appearance did not give notice of its explosive contents.","classification":"HISTORICAL","source":"ny-1928","unlocksAt":2,"knownBy":["railroad","counsel","judge"]},
+    {"id":"f7","text":"The explosion caused scales on the platform to fall, injuring Palsgraf.","classification":"HISTORICAL","source":"ny-1928","unlocksAt":1,"knownBy":["client","railroad","counsel","judge"]},
+    {"id":"f8","text":"A jury verdict for Palsgraf awarded $6,000 in 1927.","classification":"HISTORICAL","source":"ad-1927","unlocksAt":4,"knownBy":["client","railroad","counsel","judge"]}
+  ],
+  "reveal": {
+    "disposition":"The New York Court of Appeals reversed the judgment in favor of Palsgraf.",
+    "majority":"Chief Judge Benjamin Cardozo's majority understood negligence as relational: the plaintiff's right depends on a foreseeable risk of harm to that plaintiff; on these facts, no duty was breached toward Palsgraf.",
+    "dissent":"Judge William Andrews's dissent treated the negligent act as a wrong to the world at large and located the question of the extent of liability mainly in proximate cause.",
+    "date":"1928-05-29","citation":"248 N.Y. 339 (1928)","source":"ny-1928"
+  }
+}

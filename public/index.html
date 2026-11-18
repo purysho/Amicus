@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>Amicus — your law school OS</title><link rel="stylesheet" href="/styles.css"></head>
+<body>
+<div class="app">
+<aside class="sidebar">
+  <div class="brand"><div class="mark">A<span>.</span></div><div><strong>amicus</strong><small>LAW STUDENT OS</small></div></div>
+  <div class="workspace-caption">YOUR WORKSPACE</div>
+  <nav id="nav" aria-label="Main navigation">
+    <button class="navitem active" data-tab="home"><span class="ico">⌂</span> Overview</button>
+    <button class="navitem" data-tab="study"><span class="ico">◫</span> Learning lab</button>
+    <button class="navitem" data-tab="case"><span class="ico">⚖</span> Case simulation <i>LIVE</i></button>
+    <button class="navitem" data-tab="research"><span class="ico">▤</span> Research vault</button>
+    <button class="navitem" data-tab="career"><span class="ico">◈</span> Career strategy</button>
+    <button class="navitem" data-tab="control"><span class="ico">⛨</span> Data & controls</button>
+  </nav>
+  <div class="sidebar-bottom"><div class="sidebar-note">A workspace that gets smarter as you practice—without pretending to know what it hasn't tested.</div><div class="side-profile"><div class="avatar">LS</div><div><strong id="side-name">Demo student</strong><span id="side-year">1L · local workspace</span></div><div class="dot"></div></div></div>
+</aside>
+<div class="main-container">
+  <header class="topbar"><div class="crumb"><span>Workspace</span><b>/</b><span id="crumb-title">Overview</span></div><div class="top-actions"><span class="status-pill" id="model-status">GUIDED OFFLINE</span><button class="small-btn" id="export-top">↓ Export data</button><span class="today">LOCAL-FIRST · PRIVATE</span></div></header>
+  <div class="content-shell"><main id="view" aria-live="polite"></main>
+    <aside class="assistant-panel"><div class="assistant-head"><div class="ai-orb">✦</div><div><strong>Ask Amicus</strong><span>Your academic chief-of-staff</span></div></div><div class="assistant-intro"><span>CONTEXT-AWARE ASSISTANCE</span><h3>Think with a second chair.</h3><p>Ask for a plan, challenge your legal reasoning, or prepare for a difficult question.</p></div><div id="assistant-messages" class="assistant-messages"><div class="ai-bubble">Welcome. I can help you reason through legal questions, but I'll distinguish verified sources from generated advice. Want to start with your weakest doctrine?</div></div><div class="assistant-compose"><select id="tutor-mode" aria-label="Teaching mode"><option value="socratic">Socratic</option><option value="explain">Explain</option><option value="teach">Teach me</option><option value="cold-call">Cold call</option><option value="hint">Hint only</option><option value="exam">Exam conditions</option><option value="model-answer">Model answer</option></select><form id="assistant-form"><textarea aria-label="Message Amicus" id="assistant-input" placeholder="Ask anything about law school…" rows="2" required></textarea><button type="submit" class="send-btn" aria-label="Send message">➜</button></form><small>Education support · Not legal advice</small></div></aside>
+  </div>
+</div></div><div id="toast" role="status" aria-live="polite"></div><script type="module" src="/app.js"></script></body></html>
